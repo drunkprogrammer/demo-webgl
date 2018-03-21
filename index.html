@@ -1,0 +1,231 @@
+<html>
+	<head>
+		<title></title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+				text-align:center;
+			}
+			#zhanshi{
+					position: absolute;  
+					top: 140px;  
+					left: 0%;  
+					width: 10%;  
+					height: 50px;  
+					padding: 16px;  
+					<!-- border: 16px solid orange;   -->
+					background-color: white;  
+					z-index:1002;  
+			}
+			#xueweizhanshi{
+					position: absolute;  
+					top: 200px;  
+					left: 0%;  
+					width: 10%;  
+					height: 200px;  
+					padding: 16px;  
+					<!-- border: 16px solid orange;   -->
+					background-color: white;  
+					z-index:1002;  
+			}
+			.white_content2 {  
+				display: none;  
+				position: absolute;  
+				top: 15%;  
+				left: 10%;  
+				width: 60%;  
+				height: 70%;  
+				padding: 16px;  
+				border: 16px solid orange;  
+				background-color: black;  
+				z-index:1003;  
+				overflow: auto;  }
+							a{
+				font-size:25px;
+				font-family:"Microsoft YaHei";
+				color:'black';
+				text-align:left;
+
+			}			
+		.white_content3 {  
+				display: none;  
+				position: absolute;  
+				top: 15%;  
+				left: 10%;  
+				width: 60%;  
+				height: 70%;  
+				padding: 16px;  
+				border: 16px solid orange;  
+				background-color: black;  
+				z-index:1003;  
+				overflow: auto;  }
+							a{
+				font-size:25px;
+				font-family:"Microsoft YaHei";
+				color:'black';
+				text-align:left;
+
+			}
+		</style>
+	</head>
+	<body>
+		<script src="https://cdn.bootcss.com/three.js/90/three.min.js"></script>
+		<script src="OBJLoader.js"></script>		
+		<script src="MTLLoader.js"></script>
+		<script src="OrbitControls.js"></script>
+		<!-- <script src="FlyControls.js"></script> -->
+		<script>
+		var container,mousedown=0;
+			
+		var camera, positionRecordX,positionRecordY,positionRecordZ,scene, renderer,controls;
+		var  texture, material, mesh;
+
+		var raycaster = new THREE.Raycaster();                    //射线
+		var mouse = new THREE.Vector2();
+		
+		var distanceRecord;
+
+				
+		document.onmousedown=function(e){
+			mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+			mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+			mousedown=1;};
+		init();
+		animate();
+
+			function init() {
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 200000 );//相机
+				camera.position.x =5000;  											//相机位置		；往后退						
+				camera.position.y =0; 												//相机位置		；俯视					
+				camera.position.z =0;                                              // 相机视觉       
+				
+				scene = new THREE.Scene();
+		
+				<!-- var light = new THREE.AmbientLight(0xffffff,1); // 环境光 可以不加 -->
+				<!-- scene.add( light ); -->
+				
+				var pointLight = new THREE.PointLight( 0xffffff,1.5);  //点光源
+				camera.add( pointLight );
+				scene.add( camera );
+
+				var onProgress = function ( xhr ) {  
+               if ( xhr.lengthComputable ) {  
+                     var percentComplete = xhr.loaded / xhr.total * 100;  
+                    }  
+                };  
+                var onError = function ( xhr ) { };
+				//模型2的导入
+				 var mtlLoader = new THREE.MTLLoader(); 
+				 mtlLoader.setPath( 'building/' ); 
+				mtlLoader.load( 'model.mtl', function( materials ) {	//模型的贴图	 -->
+						 materials.preload();
+				var loader2 = new THREE.OBJLoader();
+							loader2.setMaterials( materials ); 
+							loader2.setPath( 'building/' ); 
+							loader2.load(
+							'building/model.obj',
+							function ( obj2 ) {
+							obj2.position.x = -22200;					//模型楼房文件位置和贴图mtl位置，要记得提醒老师的楼房形心要放在坐标原点
+							obj2.position.y = -200;					//模型的位置、高度
+							obj2.position.z = 0;   			    //+右 -左
+							obj2.rotation.y = Math.PI;;   			    //旋转
+							obj2.scale.set(1,1,1);      				//模型导入的缩放，这里巧合大小刚好
+							scene.add( obj2 );	
+							});
+				 });
+				
+				
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+				
+				controls = new THREE.OrbitControls( camera,renderer.domElement );
+				controls.target=new THREE.Vector3(0,0,0);
+				controls.update();
+				
+				//广告牌  
+				var guanggaopai_geometry =new THREE.PlaneGeometry(10,10);     //广告牌的长宽
+				var guanggaopai_material = new THREE.MeshBasicMaterial({color: 0xffffff, map: THREE.ImageUtils.loadTexture("bilibili.png"),side: THREE.DoubleSide});//广告牌子的材料(贴图)
+				
+				var guanggaopai =new THREE.Mesh( guanggaopai_geometry, guanggaopai_material );  //把广告牌的形状和图片结合在一起
+				guanggaopai.position.x=0;		//广告牌的空间位置
+				guanggaopai.position.y=30;
+				guanggaopai.position.z=0;   
+				
+				guanggaopai.rotation.x=90*Math.PI/180;					//广告牌的空间姿态x  旋转角度
+				guanggaopai.rotation.y=0;								//广告牌的空间姿态y
+				guanggaopai.rotation.z=0;								//广告牌的空间姿态z
+				
+				guanggaopai.url='www.5151818.com';   
+				scene.add( guanggaopai );								//往场景中添加整合好的物体
+					
+				//广告牌2，第二个广告牌，以此类推可以有第三个，但是要注意命名和位置不要重叠，定义大小和位置和自由姿态8个参数
+				var guanggaopai_geometry2 =new THREE.PlaneGeometry(10,10);     //广告牌的长宽
+				var guanggaopai_material2 = new THREE.MeshBasicMaterial({color: 0xffffff, map: THREE.ImageUtils.loadTexture("baidu.png"),side: THREE.DoubleSide});//广告牌子的材料(贴图)
+				
+				var guanggaopai2 =new THREE.Mesh( guanggaopai_geometry2, guanggaopai_material2 );  //把广告牌的形状和图片结合在一起
+				guanggaopai2.position.x=0;		//广告牌的空间位置
+				guanggaopai2.position.y=50;
+				guanggaopai2.position.z=30;   
+				
+				guanggaopai2.rotation.x=0*Math.PI/180;					//广告牌的空间姿态x  旋转角度
+				guanggaopai2.rotation.y=0*Math.PI/180;					//广告牌的空间姿态y
+				guanggaopai2.rotation.z=0*Math.PI/180;					//广告牌的空间姿态z
+				
+				scene.add( guanggaopai2 );	
+				guanggaopai2.url='www.baidu.com';                   //广告牌对应的url网址
+
+				positionRecordX=camera.position.x;positionRecordY=camera.position.y;
+			};
+				
+
+			function animate() {
+				if(mousedown){         //点击触发射线
+						raycaster.setFromCamera( mouse, camera );
+						var intersects = raycaster.intersectObjects( scene.children,true );
+							if(intersects[0]!=null)
+								if(intersects[0].object.geometry.type=='PlaneGeometry'){
+									window.location.href='http://www.5151818.com'; //对接的网址
+									}
+					mousedown=0;
+				}
+				requestAnimationFrame(animate);	
+				renderer.render( scene, camera );
+				controls.update();
+				if((camera.position.x!=positionRecordX||camera.position.y!=positionRecordY)&&(Math.abs(camera.position.distanceTo(controls.target)-distanceRecord)>0.01)){
+					controls.target.x+=camera.position.x-positionRecordX;
+					controls.target.y+=camera.position.y-positionRecordY;
+					controls.target.z+=camera.position.z-positionRecordZ;
+
+				}	
+
+				
+				
+				//update the date
+				positionRecordX=camera.position.x;
+				positionRecordY=camera.position.y;
+				positionRecordZ=camera.position.z;
+				
+				distanceRecord=camera.position.distanceTo(controls.target);
+				<!-- console.log(distanceRecord); -->
+			}
+					
+		
+		</script>
+		<script>
+		</script>
+	</body>
+</html>
